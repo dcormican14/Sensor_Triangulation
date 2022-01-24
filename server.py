@@ -2,6 +2,7 @@ import socket
 import select
 import pickle
 import time
+import numpy as np
 
 class Server:
     def __init__(self, h_len=10, port=8887):
@@ -18,6 +19,7 @@ class Server:
 
         # List of connected clients - socket as a key, user header and name as data
         self.clients = {}
+        self.data_arr = np.array([])
 
     # Handles message receiving
     def receive_message(self, client_socket):
@@ -41,6 +43,15 @@ class Server:
         else:
             self.server_socket.close()
             print(f'socket on {self.IP}:{self.PORT} is closed')
+
+    def get_data(self):
+        return self.data_arr
+
+    def add_data(self, client="other", local_data="Hello World"):
+        self.data_arr = np.append(self.data_arr, [client, local_data])
+
+    def clear_data(self):
+        self.data_arr = []
 
     def listen(self):
         read_sockets, _, exception_sockets = select.select(self.sockets_list, [], self.sockets_list)
@@ -76,13 +87,14 @@ class Server:
 
                 # Get user data
                 user = self.clients[notified_socket]
-                print(f'Received message from {user["data"].decode("utf-8")}: {pickle.loads(message["data"])}')
+                # print(f'Received message from {user["data"].decode("utf-8")}: {pickle.loads(message["data"])}')
+                self.add_data(client=user["data"].decode("utf-8"), local_data=pickle.loads(message["data"]))
 
                 # Iterate over connected clients and broadcast message to users
-                for client_socket in self.clients:
-                    # But don't sent it to sender
-                    if client_socket != notified_socket:
-                        client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
+                # for client_socket in self.clients:
+                #     # But don't sent it to sender
+                #     if client_socket != notified_socket:
+                #         client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
 
         # It's not really necessary to have this, but will handle some socket exceptions just in case
         for notified_socket in exception_sockets:
@@ -92,9 +104,11 @@ class Server:
 
 
 # EXAMPLE CODE FOR CONSTRUCTING AND RUNNING A SERVER.
-# 
-# s=Server(h_len=10,
+#
+# s=server.Server(h_len=10,
 #          port=8887,)
 # s.toggle_on()
 # while True:
 #     s.listen()
+#     s.get_data()
+# s.clear_data()

@@ -85,7 +85,7 @@ class Client:
 
 # EXAMPLE CODE FOR CONSTRUCTING AND RUNNING A CLIENT.
 #
-# c=Client(h_len=10,
+# c=client.Client(h_len=10,
 #          server_hostname="DylanPC",
 #          port=8887,
 #          u_name="Test",)
